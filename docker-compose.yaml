@@ -1,0 +1,52 @@
+version: '3.9'
+
+services:
+        mysql:
+                image: mysql 
+                container_name: mysqlcontainer
+                restart: unless-stopped
+                environment:
+                    - MYSQL_ROOT_PASSWORD=password
+                    - MYSQL_USER=wp_db_user
+                    - MYSQL_PASSWORD=W0rdprestaBapaworD
+                    - MYSQL_DATABASE=wordpress
+                volumes:
+                    - dbfile:/var/lib/mysql
+                command: '--default-authentication-plugin=mysql_native_password'
+                networks:
+                    - wpress
+
+
+        php:
+                build: . 
+                container_name: fpmcontainer
+                depends_on:
+                   - mysql
+
+                restart: unless-stopped
+                volumes:
+                   - ./wordpress:/var/www/html
+                networks:
+                   - wpress
+
+
+        nginx:
+                image: nginx
+                container_name: nginxcontainer
+                restart: unless-stopped
+                ports:
+                   - "80:80"
+                volumes:
+                   - ./conf:/etc/nginx/conf.d
+                   - ./wordpress:/var/www/html  
+                depends_on:
+                   - php
+                networks:
+                   - wpress
+
+volumes:
+       dbfile:
+
+networks:
+  wpress:
+    driver: bridge
